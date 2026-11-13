@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ガレージセール品価値見積もり</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-amber-50 min-h-screen">
+<div class="max-w-2xl mx-auto p-4">
+  <h1 class="text-2xl font-bold text-center text-amber-800 mt-6 mb-1">🏷️ ガレージセール品価値見積もり</h1>
+  <p class="text-center text-gray-500 mb-6 text-sm">フリマ相場ベースの売価推定・出品優先度スコア</p>
+
+  <div class="bg-white rounded-xl shadow p-5 mb-5">
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label for="item-name" class="block text-sm font-semibold text-gray-700 mb-1">商品名</label>
+        <input id="item-name" type="text" placeholder="例: 電子レンジ" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
+      </div>
+      <div>
+        <label for="category" class="block text-sm font-semibold text-gray-700 mb-1">カテゴリ</label>
+        <select id="category" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 bg-white">
+          <option value="electronics">家電</option>
+          <option value="clothing">衣類</option>
+          <option value="books">本・漫画</option>
+          <option value="toys">おもちゃ・ゲーム</option>
+          <option value="furniture">家具</option>
+          <option value="sports">スポーツ用品</option>
+          <option value="kitchen">キッチン用品</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label for="purchase-year" class="block text-sm font-semibold text-gray-700 mb-1">購入年</label>
+        <select id="purchase-year" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 bg-white">
+          <option value="1">1年以内</option>
+          <option value="2">2〜3年前</option>
+          <option value="5">4〜5年前</option>
+          <option value="8">6〜10年前</option>
+          <option value="15">10年以上前</option>
+        </select>
+      </div>
+      <div>
+        <label for="condition" class="block text-sm font-semibold text-gray-700 mb-1">状態</label>
+        <select id="condition" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 bg-white">
+          <option value="new">新品同様（未使用）</option>
+          <option value="good">良好（使用感少）</option>
+          <option value="normal" selected>普通（使用感あり）</option>
+          <option value="poor">やや難あり</option>
+          <option value="junk">ジャンク品</option>
+        </select>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label for="original-price" class="block text-sm font-semibold text-gray-700 mb-1">購入価格（円）</label>
+      <input id="original-price" type="number" placeholder="例: 50000" min="0" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
+    </div>
+    <button id="estimate-btn" aria-label="見積もりを計算する" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition-colors">💰 見積もりを計算</button>
+  </div>
+
+  <div id="result-panel" class="hidden bg-white rounded-xl shadow p-5 mb-5">
+    <h2 class="font-bold text-amber-800 mb-4">📊 見積もり結果</h2>
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="bg-amber-50 rounded-lg p-3 text-center">
+        <div class="text-xs text-gray-500 mb-1">推定売価（個別）</div>
+        <div id="unit-price" class="text-xl font-bold text-amber-700"></div>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-3 text-center">
+        <div class="text-xs text-gray-500 mb-1">一括売却（-30%）</div>
+        <div id="bulk-price" class="text-xl font-bold text-blue-700"></div>
+      </div>
+      <div class="bg-green-50 rounded-lg p-3 text-center">
+        <div class="text-xs text-gray-500 mb-1">手数料後の手取り</div>
+        <div id="net-price" class="text-xl font-bold text-green-700"></div>
+      </div>
+    </div>
+    <div class="mb-4">
+      <div class="flex justify-between items-center mb-1">
+        <span class="text-sm font-semibold text-gray-700">出品優先度スコア</span>
+        <span id="priority-label" class="text-sm font-bold"></span>
+      </div>
+      <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+        <div id="priority-bar" class="h-full rounded-full transition-all duration-500"></div>
+      </div>
+    </div>
+    <div id="advice" class="bg-gray-50 rounded-lg p-3 text-sm text-gray-700"></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-5 mb-5">
+    <h3 class="font-bold text-gray-700 mb-3 text-sm">追加した商品リスト</h3>
+    <div id="item-list" class="text-sm text-gray-500">まだ商品がありません</div>
+    <div id="total-section" class="hidden mt-3 pt-3 border-t border-gray-200">
+      <div class="flex justify-between font-bold text-gray-700">
+        <span>合計推定収益</span>
+        <span id="total-price" class="text-green-700"></span>
+      </div>
+      <button id="clear-list-btn" aria-label="商品リストをクリア" class="mt-2 text-xs text-red-400 hover:text-red-600">リストをクリア</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+const KEY = 'app_garage-sale-item-valuation-estimator';
+let items = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+const BASE_RATES = {
+  electronics: 0.3, clothing: 0.2, books: 0.15, toys: 0.25,
+  furniture: 0.2, sports: 0.25, kitchen: 0.2, other: 0.2
+};
+const CONDITION_MULT = { new: 1.0, good: 0.75, normal: 0.5, poor: 0.3, junk: 0.1 };
+const YEAR_MULT = { '1': 0.9, '2': 0.7, '5': 0.5, '8': 0.3, '15': 0.15 };
+const MIN_PRICES = {
+  electronics: 500, clothing: 100, books: 50, toys: 100,
+  furniture: 300, sports: 200, kitchen: 100, other: 100
+};
+
+function calcPrice(origPrice, category, yearKey, condition) {
+  const base = origPrice * BASE_RATES[category];
+  const price = Math.max(base * CONDITION_MULT[condition] * YEAR_MULT[yearKey], MIN_PRICES[category]);
+  return Math.round(price / 50) * 50;
+}
+
+function calcPriorityScore(unitPrice, origPrice, condition) {
+  let score = 0;
+  if (unitPrice >= 5000) score += 40;
+  else if (unitPrice >= 2000) score += 25;
+  else if (unitPrice >= 500) score += 15;
+  else score += 5;
+  const ratio = origPrice > 0 ? unitPrice / origPrice : 0;
+  if (ratio > 0.3) score += 30;
+  else if (ratio > 0.15) score += 20;
+  else score += 5;
+  if (condition === 'new' || condition === 'good') score += 30;
+  else if (condition === 'normal') score += 15;
+  else score += 5;
+  return Math.min(score, 100);
+}
+
+function renderItems() {
+  const el = document.getElementById('item-list');
+  const total = document.getElementById('total-section');
+  if (!items.length) {
+    el.textContent = 'まだ商品がありません';
+    total.classList.add('hidden');
+    return;
+  }
+  total.classList.remove('hidden');
+  let sum = 0;
+  el.innerHTML = items.map((item, i) => { // xss-ok: item.name escaped via escapeHtml; netPrice is number via toLocaleString(); i is integer index
+    sum += item.netPrice;
+    return '<div class="flex justify-between items-center py-1 border-b border-gray-100">' +
+      '<span class="text-gray-700">' + escapeHtml(item.name) + '</span>' +
+      '<div class="flex items-center gap-2">' +
+      '<span class="text-green-600 font-semibold">¥' + item.netPrice.toLocaleString() + '</span>' +
+      '<button class="text-red-300 hover:text-red-500 text-xs" data-idx="' + i + '" aria-label="' + escapeHtml(item.name) + 'を削除">✕</button>' +
+      '</div></div>';
+  }).join('');
+  document.getElementById('total-price').textContent = '¥' + sum.toLocaleString();
+  el.querySelectorAll('button[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      items.splice(parseInt(btn.dataset.idx), 1);
+      localStorage.setItem(KEY, JSON.stringify(items));
+      renderItems();
+    });
+  });
+}
+
+document.getElementById('estimate-btn').addEventListener('click', () => {
+  const name = document.getElementById('item-name').value.trim();
+  const category = document.getElementById('category').value;
+  const yearKey = document.getElementById('purchase-year').value;
+  const condition = document.getElementById('condition').value;
+  const origPrice = parseFloat(document.getElementById('original-price').value) || 10000;
+
+  const unitPrice = calcPrice(origPrice, category, yearKey, condition);
+  const bulkPrice = Math.round(unitPrice * 0.7 / 50) * 50;
+  const netPrice = Math.round(unitPrice * 0.9 / 50) * 50;
+  const score = calcPriorityScore(unitPrice, origPrice, condition);
+
+  document.getElementById('result-panel').classList.remove('hidden');
+  document.getElementById('unit-price').textContent = '¥' + unitPrice.toLocaleString();
+  document.getElementById('bulk-price').textContent = '¥' + bulkPrice.toLocaleString();
+  document.getElementById('net-price').textContent = '¥' + netPrice.toLocaleString();
+
+  const bar = document.getElementById('priority-bar');
+  const lbl = document.getElementById('priority-label');
+  bar.style.width = score + '%';
+  if (score >= 70) { bar.className = 'h-full rounded-full bg-green-500 transition-all duration-500'; lbl.className = 'text-sm font-bold text-green-600'; lbl.textContent = score + '点 — 個別出品推奨'; }
+  else if (score >= 40) { bar.className = 'h-full rounded-full bg-yellow-500 transition-all duration-500'; lbl.className = 'text-sm font-bold text-yellow-600'; lbl.textContent = score + '点 — 普通'; }
+  else { bar.className = 'h-full rounded-full bg-red-400 transition-all duration-500'; lbl.className = 'text-sm font-bold text-red-500'; lbl.textContent = score + '点 — 一括売却か処分推奨'; }
+
+  const advice = document.getElementById('advice');
+  if (score >= 70) advice.textContent = '高価値商品です。メルカリ・ラクマへの個別出品で最大収益が期待できます。写真を複数枚撮影して丁寧な説明文を作成しましょう。';
+  else if (score >= 40) advice.textContent = '中程度の価値があります。ジャンク市やフリマアプリのまとめ売りが効率的かもしれません。';
+  else advice.textContent = '価値は低めです。リサイクルショップへの持ち込みや無料譲渡・廃棄も検討してみてください。出品コスト（時間・送料）を考慮しましょう。';
+
+  if (name) {
+    items.push({ name, unitPrice, bulkPrice, netPrice, score });
+    localStorage.setItem(KEY, JSON.stringify(items));
+    renderItems();
+  }
+});
+
+document.getElementById('clear-list-btn').addEventListener('click', () => {
+  if (!confirm('リストをクリアしますか？')) return;
+  items = [];
+  localStorage.setItem(KEY, JSON.stringify(items));
+  renderItems();
+});
+
+renderItems();
+</script>
+</body>
+</html>
